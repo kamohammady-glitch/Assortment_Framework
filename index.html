@@ -7,6 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{--bg:#0f1117;--card:#161820;--border:#2a2d3a;--text:#e8e6e0;--sub:#8a8c9a;--muted:#4a4d5a;--blue:#7eb8f7;--bluebg:#1e2d4a;--teal:#5ecfad;--tealbg:#152e28;--amber:#f0a832;--amberbg:#2e1e08;--coral:#e87a52;--coralbg:#2e120a;--purple:#a88ae8;--purplebg:#201638;--green:#7ab842;--greenbg:#152210;--pink:#e87aaa;--pinkbg:#2e1220;--gray:#a0a2b0;--graybg:#1e2028;}
+body.light{--bg:#f5f6fa;--card:#ffffff;--border:#e0e2ea;--text:#1a1c24;--sub:#5a5d72;--muted:#9a9db0;--blue:#1a6bb5;--bluebg:#ddeeff;--teal:#0e7a58;--tealbg:#d4f4e8;--amber:#a0620a;--amberbg:#fef3d8;--coral:#b84020;--coralbg:#fde8e0;--purple:#6040b8;--purplebg:#ede8fd;--green:#3a7010;--greenbg:#e8f5d8;--pink:#a03060;--pinkbg:#fde8f0;--gray:#505270;--graybg:#eaebf0;}
 html,body{background:var(--bg);font-family:system-ui,-apple-system,sans-serif;color:var(--text);overflow-x:hidden;}
 .hdr{background:var(--card);border-bottom:1px solid var(--border);padding:14px 16px 10px;}
 .hdr-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:2px;}
@@ -79,9 +80,12 @@ table.dt tr:last-child td{border-bottom:none;}
 .bnav-btn{flex:1;padding:12px 4px;border:none;background:none;color:var(--muted);font-size:11px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:inherit;}
 .bnav-btn.active{color:var(--blue);}
 .nav-icon{font-size:18px;line-height:1;}
+.theme-btn{position:fixed;top:10px;right:12px;z-index:200;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:12px;color:var(--sub);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;}
 </style>
 </head>
 <body>
+
+<button class="theme-btn" onclick="toggleTheme()" id="themeBtn">&#9790; Dark</button>
 
 <div class="hdr">
   <div class="hdr-title">Assortment Planning Framework</div>
@@ -265,22 +269,25 @@ function smoothPath(data,yMin,yMax){
 }
 
 function renderSVG(def){
+  var isLight=document.body.classList.contains('light');
+  var gridClr=isLight?'#e0e2ea':'#2a2d3a';
+  var lblClr=isLight?'#9a9db0':'#5a5d6a';
+  var axisClr=isLight?'#c0c2cc':'#3a3d4a';
+  var bgClr=isLight?'#f5f6fa':'#0f1117';
   var svg='';
   // grid
   [0,0.25,0.5,0.75,1].forEach(function(t){
     var y=(PT+CH*(1-t)).toFixed(1);
     var v=Math.round(def.yMin+(def.yMax-def.yMin)*t);
-    svg+='<line x1="'+PL+'" y1="'+y+'" x2="'+(VW-PR)+'" y2="'+y+'" stroke="#2a2d3a" stroke-width="0.5"/>';
-    svg+='<text x="'+(PL-4)+'" y="'+y+'" text-anchor="end" dominant-baseline="central" font-size="9" fill="#5a5d6a">'+v+'</text>';
+    svg+='<line x1="'+PL+'" y1="'+y+'" x2="'+(VW-PR)+'" y2="'+y+'" stroke="'+gridClr+'" stroke-width="0.5"/>';
+    svg+='<text x="'+(PL-4)+'" y="'+y+'" text-anchor="end" dominant-baseline="central" font-size="9" fill="'+lblClr+'">'+v+'</text>';
   });
-  // x labels
   def.labels.forEach(function(lbl,i){
     var x=(PL+(i/(def.labels.length-1))*CW).toFixed(1);
-    svg+='<text x="'+x+'" y="'+(VH-5)+'" text-anchor="middle" font-size="9" fill="#5a5d6a">'+lbl+'</text>';
+    svg+='<text x="'+x+'" y="'+(VH-5)+'" text-anchor="middle" font-size="9" fill="'+lblClr+'">'+lbl+'</text>';
   });
-  // axes
-  svg+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(PT+CH)+'" stroke="#3a3d4a" stroke-width="0.8"/>';
-  svg+='<line x1="'+PL+'" y1="'+(PT+CH)+'" x2="'+(VW-PR)+'" y2="'+(PT+CH)+'" stroke="#3a3d4a" stroke-width="0.8"/>';
+  svg+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(PT+CH)+'" stroke="'+axisClr+'" stroke-width="0.8"/>';
+  svg+='<line x1="'+PL+'" y1="'+(PT+CH)+'" x2="'+(VW-PR)+'" y2="'+(PT+CH)+'" stroke="'+axisClr+'" stroke-width="0.8"/>';
 
   // series 1
   var d1=smoothPath(def.data,def.yMin,def.yMax);
@@ -288,7 +295,7 @@ function renderSVG(def){
   var last1=p1[p1.length-1];
   svg+='<path d="'+d1+' L'+last1.x+','+(PT+CH)+' L'+PL+','+(PT+CH)+' Z" fill="'+def.fill+'" stroke="none"/>';
   svg+='<path d="'+d1+'" fill="none" stroke="'+def.color+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
-  p1.forEach(function(p){svg+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="'+def.color+'" stroke="#0f1117" stroke-width="1.5"/>';});
+  p1.forEach(function(p){svg+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="'+def.color+'" stroke="'+bgClr+'" stroke-width="1.5"/>';});
 
   // series 2 (optional)
   if(def.data2){
@@ -297,7 +304,7 @@ function renderSVG(def){
     var last2=p2[p2.length-1];
     svg+='<path d="'+d2+' L'+last2.x+','+(PT+CH)+' L'+PL+','+(PT+CH)+' Z" fill="'+def.fill2+'" stroke="none"/>';
     svg+='<path d="'+d2+'" fill="none" stroke="'+def.color2+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,3"/>';
-    p2.forEach(function(p){svg+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="'+def.color2+'" stroke="#0f1117" stroke-width="1.5"/>';});
+    p2.forEach(function(p){svg+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="'+def.color2+'" stroke="'+bgClr+'" stroke-width="1.5"/>';});
   }
   return svg;
 }
@@ -321,6 +328,20 @@ function showC(idx){
 }
 
 showC(0);
+
+function toggleTheme(){
+  var isLight=document.body.classList.toggle('light');
+  var btn=document.getElementById('themeBtn');
+  btn.innerHTML=isLight?'&#9728; Light':'&#9790; Dark';
+  localStorage.setItem('theme',isLight?'light':'dark');
+  showC(activeC);
+}
+
+// Restore saved theme
+if(localStorage.getItem('theme')==='light'){
+  document.body.classList.add('light');
+  document.getElementById('themeBtn').innerHTML='&#9728; Light';
+}
 </script>
 </body>
 </html>
